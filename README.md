@@ -16,7 +16,8 @@ A non-prescriptive guide on common migration recipes and how to avoid trouble.
 ---
  
 ## Adding an index
-Creating an index will block both reads and writes. This scenario is used as an example in the How to inspect locks in a query section
+
+Creating an index will block both reads and writes.
 
 ### BAD ❌
 
@@ -30,7 +31,7 @@ end
 
 ### GOOD ✅
 
-Instead, have Postgres create the index concurrently which does not block reads. You will need to disable the migration transactions to use CONCURRENTLY.
+Instead, have Postgres create the index concurrently which does not block reads. You will need to disable the migration transactions to use `CONCURRENTLY`.
 
 ```elixir
 @disable_ddl_transaction true
@@ -43,7 +44,7 @@ end
 
 The migration may still take a while to run, but reads and updates to rows will continue to work. For example, for 100,000,000 rows it took 165 seconds to add run the migration, but SELECTS and UPDATES could occur while it was running.
 
-**Do not have other changes in the same migration**. Only create the index concurrently, and have separate migrations for other changes.
+**Do not have other changes in the same migration**; only create the index concurrently and separate other changes to later migrations.
 
 ---
 
@@ -82,7 +83,7 @@ def change do
 end
 ```
  
- These migrations can be in the same deployment; but make sure they’re separate migrations.
+ These migrations can be in the same deployment, but make sure they are separate migrations.
  
 ---
  
@@ -102,7 +103,6 @@ Note: This becomes safe in:
 def change do
   alter table("comments") do
     add :approved, :boolean, default: false
-    # This took 34 seconds for 10 million rows with no fkeys,
     # This took 10 minutes for 100 million rows with no fkeys,
 
     # Obtained an AccessExclusiveLock on the table, which blocks reads and
@@ -200,9 +200,6 @@ If Ecto is still configured to read a column in any running instances of the app
 def change
   alter table("posts") do
     remove :no_longer_needed_column
-
-    # Obtained an AccessExclusiveLock on the table, which blocks reads and
-    # writes, but was instantaneous.
   end
 end
 ```
@@ -212,8 +209,8 @@ end
 
 Safety can be assured if the application code is first updated to remove references to the column so it's no longer loaded or queried. Then, the column can safely be removed from the table.
 
-Deploy code change to remove references to the field.
-Separately deploy migration change to remove the column.
+1. Deploy code change to remove references to the field.
+1. Deploy migration change to remove the column.
 
 First deployment:
 
@@ -241,7 +238,7 @@ end
 
 ## Renaming a column
 
-Ask yourself: "Do I really need to rename a column?". Probably not, but if you must, read on and be aware it requires time and effort.
+Ask yourself: "Do I _really_ need to rename a column?". Probably not, but if you must, read on and be aware it requires time and effort.
 
 If Ecto is configured to read a column in any running instances of the application, then queries will fail when loading data into your structs. This can happen in multi-node deployments or if you start the application before running migrations.
 
@@ -264,6 +261,8 @@ def change do
   rename table("posts"), :title, to: :summary
 end
 ```
+
+The time between your migration running and your application getting the new code may encounter trouble.
 
 ### GOOD ✅
 
@@ -308,7 +307,7 @@ Take a phased approach:
 
 ## Renaming a table
 
-Ask yourself: "Do I really need to rename a table?". Probably not, but if you must, read on and be aware it requires time and effort.
+Ask yourself: "Do I _really_ need to rename a table?". Probably not, but if you must, read on and be aware it requires time and effort.
 
 If Ecto is still configured to read a table in any running instances of the application, then queries will fail when loading data into your structs. This can happen in multi-node deployments or if you start the application before running migrations.
 
@@ -323,6 +322,32 @@ end
 ```
 
 ### GOOD ✅
+
+**Strategy 1**
+
+Rename the schema only and all calling code, and don’t rename the table:
+
+```diff
+- defmodule MyApp.Weather do
++ defmodule MyApp.Forecast do
+  use Ecto.Schema
+
+  schema "weather" do
+    field :temp_lo, :integer
+    field :temp_hi, :integer
+    field :precipitation, :float, source: :prcp
+    field :city, :string
+
+    timestamps(type: :naive_datetime_usec)
+  end
+end
+
+# and in calling code:
+- weather = MyApp.Repo.get(MyApp.Weather, “my_id”)
++ forecast = MyApp.Repo.get(MyApp.Forecast, “my_id”)
+```
+
+**Strategy 2**
 
 Take a phased approach:
 
@@ -353,7 +378,7 @@ end
 
 There are two operations occurring:
 
-1. Creating a new constraint for changing records going forward
+1. Creating a new constraint for new or updating records
 1. Validating the new constraint for existing records
 
 If these commands are happening at the same time, it obtains a lock on the table as it validates the entire table and fully scans the table. To avoid this full table scan, we can separate the operations.
@@ -385,7 +410,7 @@ These can be in the same deployment, but ensure there are 2 separate migrations.
 
 Setting NOT NULL on an existing column blocks reads and writes while every row is checked.  Just like the Adding a check constraint scenario, there are two operations occurring:
 
-1. Creating a new constraint for changing records going forward
+1. Creating a new constraint for new or updating records
 1. Validating the new constraint for existing records
 
 To avoid the full table scan, we can separate these two operations.
@@ -468,7 +493,8 @@ end
 ```
 
 ### GOOD ✅
-Use jsonb instead. Some say it’s just like “json” but “better.”
+
+Use jsonb instead. Some say it’s like “json” but “better.”
 
 ```elixir
 def change do
@@ -496,7 +522,7 @@ This content was inspired by Andrew Kane and his library [strong_migrations](htt
 
 Special thanks for sponsorship:
 
-Fly.io
+* Fly.io
 
 Special thanks for these reviewers:
 
