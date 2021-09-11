@@ -13,7 +13,7 @@ A non-prescriptive guide on common migration recipes and how to avoid trouble.
 - [Setting NOT NULL on an existing column](#setting-not-null-on-an-existing-column)
 - [Adding a JSON column](#adding-a-json-column)
 
-—-
+---
  
 ## Adding an index
 Creating an index will block both reads and writes. This scenario is used as an example in the How to inspect locks in a query section
@@ -45,7 +45,7 @@ The migration may still take a while to run, but reads and updates to rows will 
 
 **Do not have other changes in the same migration**. Only create the index concurrently, and have separate migrations for other changes.
 
-—-
+---
 
 ## Adding a reference or foreign key
 
@@ -84,7 +84,7 @@ end
  
  These migrations can be in the same deployment; but make sure they’re separate migrations.
  
-—- 
+---
  
 ## Adding a column with a default value
 
@@ -145,7 +145,7 @@ schema "comments" do
 end
 ```
 
-—-
+---
 
 ## Changing the type of a column
 
@@ -186,7 +186,7 @@ Take a phased approach:
 1. In application code, remove old column from Ecto schemas.
 1. Drop the old column.
 
-—- 
+---
 
 ## Removing a column
 
@@ -237,7 +237,7 @@ def change
 end
 ```
 
-—-
+---
 
 ## Renaming a column
 
@@ -304,7 +304,7 @@ Take a phased approach:
 1. In application code, remove old column from Ecto schemas.
 1. Drop the old column.
 
-—- 
+---
 
 ## Renaming a table
 
@@ -333,7 +333,7 @@ Take a phased approach:
 1. In application code, remove the old table from Ecto schemas.
 1. Drop the old table.
  
-—-
+---
 
 ## Adding a check constraint
 
@@ -379,7 +379,7 @@ end
 
 These can be in the same deployment, but ensure there are 2 separate migrations.
 
-—-
+---
 
 ## Setting NOT NULL on an existing column
 
@@ -451,7 +451,7 @@ end
 
 If your constraint fails, then you should consider backfilling data first to cover the gaps in your desired data integrity, then revisit validating the constraint.
 
-—-
+---
  
 ## Adding a JSON column
 
@@ -478,7 +478,7 @@ def change do
 end
 ```
 
-—-
+---
 
 # Credits
 
