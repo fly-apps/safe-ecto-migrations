@@ -535,7 +535,7 @@ Special thanks for these reviewers:
 
 [Postgres Lock Conflicts](https://www.postgresql.org/docs/12/explicit-locking.html)
 
-|  | | **Current Lock →** | | | | | |
+|  |  **Current Lock →** | | | | | | |
 |---------------------|-------------------|-|-|-|-|-|-|
 | **Requested Lock ↓** | ACCESS SHARE | ROW SHARE | ROW EXCLUSIVE | SHARE UPDATE EXCLUSIVE | SHARE | SHARE ROW EXCLUSIVE | EXCLUSIVE | ACCESS EXCLUSIVE |
 | ACCESS SHARE           |   |   |   |   |   |   |   | X |
