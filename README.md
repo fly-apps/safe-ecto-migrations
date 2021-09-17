@@ -535,8 +535,8 @@ Special thanks for these reviewers:
 
 [Postgres Lock Conflicts](https://www.postgresql.org/docs/12/explicit-locking.html)
 
-|  |  **Current Lock →** | | | | | | |
-|---------------------|-------------------|-|-|-|-|-|-|
+|  |  **Current Lock →** | | | | | | | |
+|---------------------|-------------------|-|-|-|-|-|-|-|
 | **Requested Lock ↓** | ACCESS SHARE | ROW SHARE | ROW EXCLUSIVE | SHARE UPDATE EXCLUSIVE | SHARE | SHARE ROW EXCLUSIVE | EXCLUSIVE | ACCESS EXCLUSIVE |
 | ACCESS SHARE           |   |   |   |   |   |   |   | X |
 | ROW SHARE              |   |   |   |   |   |   | X | X |
@@ -552,3 +552,17 @@ Special thanks for these reviewers:
 - `UPDATE`, `DELETE`, and `INSERT` will acquire a `ROW EXCLUSIVE` lock
 - `CREATE INDEX CONCURRENTLY` and `VALIDATE CONSTRAINT` acquires `SHARE UPDATE EXCLUSIVE`
 - `CREATE INDEX` acquires `SHARE` lock
+
+Knowing this, let's re-think the above table:
+
+|  |  **Current Operation →** | | | | | | | |
+|---------------------|-------------------|-|-|-|-|-|-|-|
+| **Requested Operation ↓** | `SELECT` | `SELECT FOR UPDATE` | `UPDATE` `DELETE` `INSERT` | `CREATE INDEX CONCURRENTLY`  `VALIDATE CONSTRAINT` | `CREATE INDEX` | SHARE ROW EXCLUSIVE | EXCLUSIVE | `ALTER TABLE` `DROP TABLE` `TRUNCATE` `REINDEX` `CLUSTER` `VACUUM FULL` |
+| `SELECT` |   |   |   |   |   |   |   | X |
+| `SELECT FOR UPDATE` |   |   |   |   |   |   | X | X |
+| `UPDATE` `DELETE` `INSERT` |   |   |   |   | X | X | X | X |
+| `CREATE INDEX CONCURRENTLY` `VALIDATE CONSTRAINT` |   |   |   | X | X | X | X | X |
+| `CREATE INDEX` |   |   | X | X |   | X | X | X |
+| SHARE ROW EXCLUSIVE |   |   | X | X | X | X | X | X |
+| EXCLUSIVE |   | X | X | X | X | X | X | X |
+| `ALTER TABLE` `DROP TABLE` `TRUNCATE` `REINDEX` `CLUSTER` `VACUUM FULL` | X | X | X | X | X | X | X | X |
