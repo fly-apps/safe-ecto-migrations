@@ -557,7 +557,7 @@ Knowing this, let's re-think the above table:
 
 |  |  **Current Operation →** | | | | | | | |
 |---------------------|-------------------|-|-|-|-|-|-|-|
-| **Requested Operation ↓** | `SELECT` | `SELECT FOR UPDATE` | `UPDATE` `DELETE` `INSERT` | `CREATE INDEX CONCURRENTLY`  `VALIDATE CONSTRAINT` | `CREATE INDEX` | SHARE ROW EXCLUSIVE | EXCLUSIVE | `ALTER TABLE` `DROP TABLE` `TRUNCATE` `REINDEX` `CLUSTER` `VACUUM FULL` |
+| **Blocks Operation ↓** | `SELECT` | `SELECT FOR UPDATE` | `UPDATE` `DELETE` `INSERT` | `CREATE INDEX CONCURRENTLY`  `VALIDATE CONSTRAINT` | `CREATE INDEX` | SHARE ROW EXCLUSIVE | EXCLUSIVE | `ALTER TABLE` `DROP TABLE` `TRUNCATE` `REINDEX` `CLUSTER` `VACUUM FULL` |
 | `SELECT` |   |   |   |   |   |   |   | X |
 | `SELECT FOR UPDATE` |   |   |   |   |   |   | X | X |
 | `UPDATE` `DELETE` `INSERT` |   |   |   |   | X | X | X | X |
