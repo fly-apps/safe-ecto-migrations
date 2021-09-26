@@ -508,7 +508,7 @@ end
 
 # Credits
 
-This content was inspired by Andrew Kane and his library [strong_migrations](https://github.com/ankane/strong_migrations). Think of this article as a port of his and his contributors' guide to Elixir and Ecto and expanded.
+Created and written by David Bernheisel with recipes heavily inspired from Andrew Kane and his library [strong_migrations](https://github.com/ankane/strong_migrations).
 
 [PostgreSQL at Scale by James Coleman](https://medium.com/braintree-product-technology/postgresql-at-scale-database-schema-changes-without-downtime-20d3749ed680)
 
