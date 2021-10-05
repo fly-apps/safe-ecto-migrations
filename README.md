@@ -214,7 +214,7 @@ Safety can be assured if the application code is first updated to remove referen
 
 First deployment:
 
-```elixir
+```diff
 # First deploy, in the Ecto schema
 
 defmodule MyApp.Post do
