@@ -530,6 +530,7 @@ Special thanks for these reviewers:
 * Stephane Robino
 * Dennis Beatty
 * Wojtek Mach
+* Mark Ericksen
 
 # Reference Material
 
