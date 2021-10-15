@@ -214,7 +214,7 @@ Safety can be assured if the application code is first updated to remove referen
 
 First deployment:
 
-```elixir
+```diff
 # First deploy, in the Ecto schema
 
 defmodule MyApp.Post do
@@ -508,7 +508,7 @@ end
 
 # Credits
 
-This content was inspired by Andrew Kane and his library [strong_migrations](https://github.com/ankane/strong_migrations). Think of this article as a port of his and his contributors' guide to Elixir and Ecto and expanded.
+Created and written by David Bernheisel with recipes heavily inspired from Andrew Kane and his library [strong_migrations](https://github.com/ankane/strong_migrations).
 
 [PostgreSQL at Scale by James Coleman](https://medium.com/braintree-product-technology/postgresql-at-scale-database-schema-changes-without-downtime-20d3749ed680)
 
@@ -530,13 +530,14 @@ Special thanks for these reviewers:
 * Stephane Robino
 * Dennis Beatty
 * Wojtek Mach
+* Mark Ericksen
 
 # Reference Material
 
 [Postgres Lock Conflicts](https://www.postgresql.org/docs/12/explicit-locking.html)
 
-|  | | **Current Lock →** | | | | | |
-|---------------------|-------------------|-|-|-|-|-|-|
+|  |  **Current Lock →** | | | | | | | |
+|---------------------|-------------------|-|-|-|-|-|-|-|
 | **Requested Lock ↓** | ACCESS SHARE | ROW SHARE | ROW EXCLUSIVE | SHARE UPDATE EXCLUSIVE | SHARE | SHARE ROW EXCLUSIVE | EXCLUSIVE | ACCESS EXCLUSIVE |
 | ACCESS SHARE           |   |   |   |   |   |   |   | X |
 | ROW SHARE              |   |   |   |   |   |   | X | X |
@@ -552,3 +553,17 @@ Special thanks for these reviewers:
 - `UPDATE`, `DELETE`, and `INSERT` will acquire a `ROW EXCLUSIVE` lock
 - `CREATE INDEX CONCURRENTLY` and `VALIDATE CONSTRAINT` acquires `SHARE UPDATE EXCLUSIVE`
 - `CREATE INDEX` acquires `SHARE` lock
+
+Knowing this, let's re-think the above table:
+
+|  |  **Current Operation →** | | | | | | | |
+|---------------------|-------------------|-|-|-|-|-|-|-|
+| **Blocks Operation ↓** | `SELECT` | `SELECT FOR UPDATE` | `UPDATE` `DELETE` `INSERT` | `CREATE INDEX CONCURRENTLY`  `VALIDATE CONSTRAINT` | `CREATE INDEX` | SHARE ROW EXCLUSIVE | EXCLUSIVE | `ALTER TABLE` `DROP TABLE` `TRUNCATE` `REINDEX` `CLUSTER` `VACUUM FULL` |
+| `SELECT` |   |   |   |   |   |   |   | X |
+| `SELECT FOR UPDATE` |   |   |   |   |   |   | X | X |
+| `UPDATE` `DELETE` `INSERT` |   |   |   |   | X | X | X | X |
+| `CREATE INDEX CONCURRENTLY` `VALIDATE CONSTRAINT` |   |   |   | X | X | X | X | X |
+| `CREATE INDEX` |   |   | X | X |   | X | X | X |
+| SHARE ROW EXCLUSIVE |   |   | X | X | X | X | X | X |
+| EXCLUSIVE |   | X | X | X | X | X | X | X |
+| `ALTER TABLE` `DROP TABLE` `TRUNCATE` `REINDEX` `CLUSTER` `VACUUM FULL` | X | X | X | X | X | X | X | X |
