@@ -514,7 +514,7 @@ This content was inspired by Andrew Kane and his library [strong_migrations](htt
 
 [Strong Migrations by Andrew Kane](https://github.com/ankane/strong_migrations)
 
-[Adding a NOT NULL CONSTRAINT on PG Faster with Minimal Locking](https://medium.com/doctolib/adding-a-not-null-constraint-on-pg-faster-with-minimal-locking-38b2c00c4d1c)
+[Adding a NOT NULL CONSTRAINT on PG Faster with Minimal Locking by Christophe Escobar](https://medium.com/doctolib/adding-a-not-null-constraint-on-pg-faster-with-minimal-locking-38b2c00c4d1c)
 
 [Postgres Runtime Configuration](https://www.postgresql.org/docs/current/runtime-config-client.html)
 
