@@ -248,15 +248,12 @@ There is a shortcut: Don't rename the database column, and instead rename the sc
 
 ```elixir
 # In your schema
-
 schema "posts" do
   field :summary, :text
 end
-```
+
 
 # In your migration
-
-```elixir
 def change do
   rename table("posts"), :title, to: :summary
 end
