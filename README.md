@@ -170,7 +170,7 @@ Safe in MySQL/MariaDB:
 ```elixir
 def change do
   alter table("posts") do
-    modify :my_column, :boolean, :text
+    modify :my_column, :boolean, from: :text
   end
 end
 ```
