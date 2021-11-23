@@ -197,7 +197,7 @@ If Ecto is still configured to read a column in any running instances of the app
 ```elixir
 # Without a code change to the Ecto Schema
 
-def change
+def change do
   alter table("posts") do
     remove :no_longer_needed_column
   end
@@ -227,7 +227,7 @@ end
 Second deployment:
 
 ```elixir
-def change
+def change do
   alter table("posts") do
     remove :no_longer_needed_column
   end
