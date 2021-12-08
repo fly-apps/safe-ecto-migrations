@@ -13,12 +13,13 @@ A non-exhaustive guide on common migration recipes and how to avoid trouble.
 - [Adding a check constraint](#adding-a-check-constraint)
 - [Setting NOT NULL on an existing column](#setting-not-null-on-an-existing-column)
 - [Adding a JSON column](#adding-a-json-column)
+- [Squashing migrations](#squashing-migrations)
 
-Read more about safe migrations at [Fly.io Phoenix Files](https://fly.io/phoenix-files/safe-ecto-migrations/) 
+Read more about safe migrations at [Fly.io Phoenix Files](https://fly.io/phoenix-files/safe-ecto-migrations/)
 where we dive into how to safely backfill data and go through Ecto Migration options.
 
 ---
- 
+
 ## Adding an index
 
 Creating an index will block both reads and writes.
@@ -86,11 +87,11 @@ def change do
   execute "ALTER TABLE posts VALIDATE CONSTRAINT group_id_fkey", ""
 end
 ```
- 
+
  These migrations can be in the same deployment, but make sure they are separate migrations.
- 
+
 ---
- 
+
 ## Adding a column with a default value
 
 Adding a column with a default value to an existing table may cause the table to be rewritten. During this time, reads and writes are blocked in Postgres, and writes are blocked in MySQL and MariaDB.
@@ -267,7 +268,7 @@ The time between your migration running and your application getting the new cod
 
 ### GOOD ✅
 
-**Strategy 1** 
+**Strategy 1**
 
 Rename the field in the schema only, and configure it to point to the database column and keep the database column the same. Ensure all calling code relying on the old field name is also updated to reference the new field name.
 
@@ -358,7 +359,7 @@ Take a phased approach:
 1. In application code, move reads from old table to the new table
 1. In application code, remove the old table from Ecto schemas.
 1. Drop the old table.
- 
+
 ---
 
 ## Adding a check constraint
@@ -455,10 +456,10 @@ end
 If you're using Postgres 12+, you can add the NOT NULL to the column after validating the constraint. From the Postgres 12 docs:
 
 > SET NOT NULL may only be applied to a column provided
-> none of the records in the table contain a NULL value 
-> for the column. Ordinarily this is checked during the 
-> ALTER TABLE by scanning the entire table; however, if 
-> a valid CHECK constraint is found which proves no NULL 
+> none of the records in the table contain a NULL value
+> for the column. Ordinarily this is checked during the
+> ALTER TABLE by scanning the entire table; however, if
+> a valid CHECK constraint is found which proves no NULL
 > can exist, then the table scan is skipped.
 
 ```elixir
@@ -478,7 +479,7 @@ end
 If your constraint fails, then you should consider backfilling data first to cover the gaps in your desired data integrity, then revisit validating the constraint.
 
 ---
- 
+
 ## Adding a JSON column
 
 In Postgres, there is no equality operator for the json column type, which can cause errors for existing SELECT DISTINCT queries in your application.
@@ -507,6 +508,81 @@ end
 
 ---
 
+## Squashing Migrations
+
+If you have a long list of migrations, sometimes it can take a while to migrate
+each of those files every time the project is reset or spun up by a new
+developer. Thankfully, Ecto comes with mix tasks to `dump` and `load` a database
+structure which will represent the state of the database up to a certain point
+in time, not including content.
+
+- [mix ecto.dump](mix_ecto_dump)
+- [mix ecto.load](mix_ecto_load)
+
+Schema dumping and loading is only supported by external binaries `pg_dump` and
+`mysqldump`, which are used by the Postgres, MyXQL, and MySQL Ecto adapters (not
+supported in MSSQL adapter).
+
+For example:
+
+```
+20210101000000 - First Migration
+20210201000000 - Second Migration
+20210701000000 - Third Migration <-- we are here now. run `mix ecto.dump`
+```
+
+We can "squash" the migrations up to the current day which will effectively
+fast-forward migrations to that structure. The Ecto Migrator will detect that
+the database is already migrated to the third migration, and so it begins there
+and migrates forward.
+
+Let's add a new migration:
+
+```
+20210101000000 - First Migration
+20210201000000 - Second Migration
+20210701000000 - Third Migration <-- `structure.sql` represents up to here
+20210801000000 - New Migration <-- This is where migrations will begin
+```
+
+The new migration will still run, but the first-through-third migrations will
+not need to be run since the structure already represents the changes applied by
+those migrations. At this point, you can safely delete the first, second, and
+third migration files or keep them for historical auditing.
+
+Let's make this work:
+
+1. Run `mix ecto.dump` which will dump the current structure into
+   `priv/repo/structure.sql` by default. [Check the mix task for more
+   options](mix_ecto_dump).
+2. During project setup with an empty database, run `mix ecto.load` to load
+   `structure.sql`.
+3. Run `mix ecto.migrate` to run any additional migrations created after the
+   structure was dumped.
+
+To simplify these actions into one command, we can leverage mix aliases:
+
+```elixir
+# mix.exs
+
+defp aliases do
+  [
+    "ecto.reset": ["ecto.drop", "ecto.setup"],
+    "ecto.setup": ["ecto.load", "ecto.migrate"],
+    # ...
+  ]
+end
+```
+
+Now you can run `mix ecto.setup` and it will load the database structure and run
+remaining migrations. Or, run `mix ecto.reset` and it will drop and run setup.
+Of course, you can continue running `mix ecto.migrate` as you create them.
+
+[mix_ecto_dump]: https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Dump.html
+[mix_ecto_load]: https://hexdocs.pm/ecto_sql/Mix.Tasks.Ecto.Load.html
+
+---
+
 # Credits
 
 Created and written by David Bernheisel with recipes heavily inspired from Andrew Kane and his library [strong_migrations](https://github.com/ankane/strong_migrations).
@@ -532,6 +608,7 @@ Special thanks for these reviewers:
 * Dennis Beatty
 * Wojtek Mach
 * Mark Ericksen
+* And [all the contributors](https://github.com/fly-apps/safe-ecto-migrations/graphs/contributors)
 
 # Reference Material
 
