@@ -36,20 +36,51 @@ end
 
 ### GOOD ✅
 
-Instead, have Postgres create the index concurrently which does not block reads. You will need to disable the migration transactions to use `CONCURRENTLY`.
+Instead, create the index concurrently which does not block reads. You will need
+to disable the migration transactions to use `CONCURRENTLY`.
+
+In Postgres, disabling database transactions will make it unsafe to run
+migrations in a multi-node environment that automatically run migrations before
+startup. Therefore, we will leverage `pg_advisory_lock` to prevent multiple
+nodes running this particular migration at the same time.
+
+Read more about `pg_advisory_lock` in the [Postgres
+docs](https://www.postgresql.org/docs/13/explicit-locking.html).
 
 ```elixir
 @disable_ddl_transaction true
 @disable_migration_lock true
 
-def change do
-  create index("posts", [:slug], concurrently: true)
+def up do
+  with_advisory_lock fn ->
+    create_if_not_exists index("import_request_statuses", [:csv_import_request_id], concurrently: true)
+  end
 end
+
+def down do
+  with_advisory_lock fn ->
+    drop_if_exists index("import_request_statuses", [:csv_import_request_id], concurrently: true)
+  end
+end
+
+def with_advisory_lock(lock_name \\ repo_advisory_name(), fun) when is_integer(lock_name) do
+  try do
+    execute("SELECT pg_advisory_lock(#{lock_name})")
+    fun.()
+  after
+    execute("SELECT pg_advisory_unlock(#{lock_name})")
+  end
+end
+
+defp repo_advisory_name(), do: :erlang.phash2("ecto_#{repo()}")
 ```
 
-The migration may still take a while to run, but reads and updates to rows will continue to work. For example, for 100,000,000 rows it took 165 seconds to add run the migration, but SELECTS and UPDATES could occur while it was running.
+The migration may still take a while to run, but reads and updates to rows will
+continue to work. For example, for 100,000,000 rows it took 165 seconds to add
+run the migration, but SELECTS and UPDATES could occur while it was running.
 
-**Do not have other changes in the same migration**; only create the index concurrently and separate other changes to later migrations.
+**Do not have other changes in the same migration**; only create the index
+concurrently and separate other changes to later migrations.
 
 ---
 
