@@ -389,7 +389,7 @@ In one migration:
 
 ```elixir
 def change do
-  create constraint("products", :price_must_be_positive, check: "price > 0"), validate: false
+  create constraint("products", :price_must_be_positive, check: "price > 0", validate: false)
   # Setting validate: false will prevent a full table scan, and therefore
   # commits immediately.
 end
@@ -436,7 +436,7 @@ In the first migration:
 ```elixir
 # Deployment 1
 def change do
-  create constraint("products", :active_not_null, check: "active IS NOT NULL"), validate: false
+  create constraint("products", :active_not_null, check: "active IS NOT NULL", validate: false)
 end
 ```
 
