@@ -24,7 +24,7 @@ where we dive into how to safely backfill data and go through Ecto Migration opt
 
 Creating an index will block both reads and writes.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 def change do
@@ -34,9 +34,9 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
-Instead, have Postgres create the index concurrently which does not block reads. You will need to disable the database transactions to use `CONCURRENTLY`, but since Ecto obtains migration locks through database transactions, this also implies that competing nodes may attempt to try to run the same migration (eg, in a multi-node Kubernetes environment that runs migrations before startup). Therefore, some nodes will fail startup for a variety of reasons due to this.
+With Postgres, instead create the index concurrently which does not block reads. You will need to disable the database transactions to use `CONCURRENTLY`, and since Ecto obtains migration locks through database transactions this also implies that competing nodes may attempt to try to run the same migration (eg, in a multi-node Kubernetes environment that runs migrations before startup). Therefore, some nodes will fail startup for a variety of reasons. 
 
 ```elixir
 @disable_ddl_transaction true
@@ -57,7 +57,7 @@ The migration may still take a while to run, but reads and updates to rows will 
 
 Adding a foreign key blocks writes on both tables.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 def change do
@@ -68,7 +68,7 @@ end
 ```
 
 
-### GOOD ✅
+**GOOD ✅**
 
 In the first migration
 
@@ -96,7 +96,7 @@ end
 
 Adding a column with a default value to an existing table may cause the table to be rewritten. During this time, reads and writes are blocked in Postgres, and writes are blocked in MySQL and MariaDB.
 
-### BAD ❌
+**BAD ❌**
 
 Note: This becomes safe in:
 
@@ -116,7 +116,7 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
 Add the column first, then alter it to include the default.
 
@@ -156,7 +156,7 @@ end
 
 Changing the type of a column may cause the table to be rewritten. During this time, reads and writes are blocked in Postgres, and writes are blocked in MySQL and MariaDB.
 
-### BAD ❌
+**BAD ❌**
 
 Safe in Postgres:
 
@@ -180,7 +180,7 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
 Take a phased approach:
 
@@ -197,7 +197,7 @@ Take a phased approach:
 
 If Ecto is still configured to read a column in any running instances of the application, then queries will fail when loading data into your structs. This can happen in multi-node deployments or if you start the application before running migrations.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 # Without a code change to the Ecto Schema
@@ -210,7 +210,7 @@ end
 ```
 
 
-### GOOD ✅
+**GOOD ✅**
 
 Safety can be assured if the application code is first updated to remove references to the column so it's no longer loaded or queried. Then, the column can safely be removed from the table.
 
@@ -249,7 +249,7 @@ If Ecto is configured to read a column in any running instances of the applicati
 
 There is a shortcut: Don't rename the database column, and instead rename the schema's field name and configure it to point to the database column.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 # In your schema
@@ -266,7 +266,7 @@ end
 
 The time between your migration running and your application getting the new code may encounter trouble.
 
-### GOOD ✅
+**GOOD ✅**
 
 **Strategy 1**
 
@@ -289,7 +289,7 @@ end
 
 ```diff
 ## Update references in other parts of the codebase:
-  my_schema = Repo.get(MySchema, "my_id")
+   my_schema = Repo.get(MySchema, "my_id")
 -  my_schema.prcp
 +  my_schema.precipitation
 ```
@@ -315,7 +315,7 @@ If Ecto is still configured to read a table in any running instances of the appl
 
 There is a shortcut: rename the schema only, and do not change the underlying database table name.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 def change do
@@ -323,7 +323,7 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
 **Strategy 1**
 
@@ -366,7 +366,7 @@ Take a phased approach:
 
 Adding a check constraint blocks reads and writes to the table in Postgres, and blocks writes in MySQL/MariaDB while every row is checked.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 def change do
@@ -376,7 +376,7 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
 There are two operations occurring:
 
@@ -417,7 +417,7 @@ Setting NOT NULL on an existing column blocks reads and writes while every row i
 
 To avoid the full table scan, we can separate these two operations.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 def change do
@@ -427,7 +427,7 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
 Add a check constraint without validating it, backfill data to satiate the constraint and then validate it. This will be functionally equivalent.
 
@@ -484,7 +484,7 @@ If your constraint fails, then you should consider backfilling data first to cov
 
 In Postgres, there is no equality operator for the json column type, which can cause errors for existing SELECT DISTINCT queries in your application.
 
-### BAD ❌
+**BAD ❌**
 
 ```elixir
 def change do
@@ -494,7 +494,7 @@ def change do
 end
 ```
 
-### GOOD ✅
+**GOOD ✅**
 
 Use jsonb instead. Some say it’s like “json” but “better.”
 
