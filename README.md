@@ -36,7 +36,7 @@ end
 
 ### GOOD ✅
 
-Instead, have Postgres create the index concurrently which does not block reads. You will need to disable the migration transactions to use `CONCURRENTLY`.
+Instead, have Postgres create the index concurrently which does not block reads. You will need to disable the database transactions to use `CONCURRENTLY`, but since Ecto obtains migration locks through database transactions, this also implies that competing nodes may attempt to try to run the same migration (eg, in a multi-node Kubernetes environment that runs migrations before startup). Therefore, some nodes will fail startup for a variety of reasons due to this.
 
 ```elixir
 @disable_ddl_transaction true
