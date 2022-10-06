@@ -22,7 +22,9 @@ where we dive into how to safely backfill data and go through Ecto Migration opt
 
 ## Adding an index
 
-Creating an index will block both reads and writes.
+Creating an index will block both reads and writes in Postgres.
+
+MySQL is concurrent by default since 5.6 unless using `SPATIAL` or `FULLTEXT` indexes (which then it [blocks reads and writes](https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html#online-ddl-index-syntax-notes)).
 
 **BAD ❌**
 
@@ -36,7 +38,29 @@ end
 
 **GOOD ✅**
 
-With Postgres, instead create the index concurrently which does not block reads. You will need to disable the database transactions to use `CONCURRENTLY`, and since Ecto obtains migration locks through database transactions this also implies that competing nodes may attempt to try to run the same migration (eg, in a multi-node Kubernetes environment that runs migrations before startup). Therefore, some nodes will fail startup for a variety of reasons. 
+With Postgres, instead create the index concurrently which does not block reads. There are two options:
+
+**Option 1**
+
+[Configure the Repo to use advisory locks](https://hexdocs.pm/ecto_sql/Ecto.Adapters.Postgres.html#module-migration-options) for locking migrations while running. Advisory locks are application-controlled database-level locks, and EctoSQL since v3.9.0 provides an option to use this type of lock. This is the safest option as it avoids the trade-off in Option 2. 
+
+Disable the DDL transaction in the migration to avoid a database transaction which is not compatible with `CONCURRENTLY` database operations.
+
+```elixir
+# in config/config.exs
+config MyApp.Repo, migration_lock: :pg_advisory_lock
+
+# in the migration
+@disable_ddl_transaction true
+
+def change do
+  create index("posts", [:slug], concurrently: true)
+end
+```
+
+**Option 2**
+
+Disable the DDL transaction and the migration lock for the migration. By default, EctoSQL with Postgres will run migrations with a DDL transaction and a migration lock which also (by default) uses another transaction. You must disable both of these database transactions to use `CONCURRENTLY`. However, disabling the migration lock will allow competing nodes to try to run the same migration at the same time (eg, in a multi-node Kubernetes environment that runs migrations before startup). Therefore, some nodes may fail startup for a variety of reasons.
 
 ```elixir
 @disable_ddl_transaction true
@@ -47,7 +71,7 @@ def change do
 end
 ```
 
-The migration may still take a while to run, but reads and updates to rows will continue to work. For example, for 100,000,000 rows it took 165 seconds to add run the migration, but SELECTS and UPDATES could occur while it was running.
+For either option chosen, the migration may still take a while to run, but reads and updates to rows will continue to work. For example, for 100,000,000 rows it took 165 seconds to add run the migration, but SELECTS and UPDATES could occur while it was running.
 
 **Do not have other changes in the same migration**; only create the index concurrently and separate other changes to later migrations.
 
