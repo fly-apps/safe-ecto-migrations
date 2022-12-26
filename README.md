@@ -42,7 +42,7 @@ With Postgres, instead create the index concurrently which does not block reads.
 
 **Option 1**
 
-[Configure the Repo to use advisory locks](https://hexdocs.pm/ecto_sql/Ecto.Adapters.Postgres.html#module-migration-options) for locking migrations while running. Advisory locks are application-controlled database-level locks, and EctoSQL since v3.9.0 provides an option to use this type of lock. This is the safest option as it avoids the trade-off in Option 2. 
+[Configure the Repo to use advisory locks](https://hexdocs.pm/ecto_sql/Ecto.Adapters.Postgres.html#module-migration-options) for locking migrations while running. Advisory locks are application-controlled database-level locks, and EctoSQL since v3.9.0 provides an option to use this type of lock. This is the safest option as it avoids the trade-off in Option 2.
 
 Disable the DDL transaction in the migration to avoid a database transaction which is not compatible with `CONCURRENTLY` database operations.
 
@@ -57,6 +57,12 @@ def change do
   create index("posts", [:slug], concurrently: true)
 end
 ```
+
+If you're using Phoenix and PhoenixEcto, you will likely appreciate disabling
+the migration lock in the CheckRepoStatus plug during dev to avoid hitting and
+waiting on the advisory lock with concurrent web processes. You can do this by
+adding `migration_lock: false` to the CheckRepoStatus plug in your
+`MyAppWeb.Endpoint`.
 
 **Option 2**
 
