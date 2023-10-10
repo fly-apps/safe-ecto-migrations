@@ -123,14 +123,14 @@ end
 
 These migrations can be in the same deployment, but make sure they are separate migrations.
 
-**Note on empty tables**: when the table creating the referenced column is empty, you may be able to 
-create the column and validate at the same time since the time difference would be milliseconds 
+**Note on empty tables**: when the table creating the referenced column is empty, you may be able to
+create the column and validate at the same time since the time difference would be milliseconds
 which may not be noticeable, no matter if you have 1 million or 100 million records in the referenced table.
 
 **Note on populated tables**: the biggest difference depends on your scale. For 1 million records in
-both tables, you may lock writes to both tables when creating the column for milliseconds 
-(you should benchmark for yourself) which could be acceptable for you. However, once your table has 
-100+ million records, the difference becomes seconds which is more likely to be felt and cause timeouts. 
+both tables, you may lock writes to both tables when creating the column for milliseconds
+(you should benchmark for yourself) which could be acceptable for you. However, once your table has
+100+ million records, the difference becomes seconds which is more likely to be felt and cause timeouts.
 The differentiating metric is the time that both tables are locked from writes. Therefore, err on the side
 of safety and separate constraint validation from referenced column creation when there is any data in the table.
 
@@ -506,15 +506,19 @@ If you're using Postgres 12+, you can add the NOT NULL to the column after valid
 > a valid CHECK constraint is found which proves no NULL
 > can exist, then the table scan is skipped.
 
+**However** we cannot use [`modify/3`](https://hexdocs.pm/ecto_sql/Ecto.Migration.html#modify/3)
+as it will include updating the column type as well unnecessarily, causing
+Postgres to rewrite the table. For more information, [see this example](https://github.com/fly-apps/safe-ecto-migrations/issues/10).
+
 ```elixir
 # **Postgres 12+ only**
 
 def change do
-  execute "ALTER TABLE products VALIDATE CONSTRAINT active_not_null", ""
+  execute "ALTER TABLE products VALIDATE CONSTRAINT active_not_null",
+          ""
 
-  alter table("products") do
-    modify :active, :boolean, null: false
-  end
+  execute "ALTER TABLE products ALTER COLUMN active SET NOT NULL",
+          "ALTER TABLE products ALTER COLUMN active DROP NOT NULL"
 
   drop constraint("products", :active_not_null)
 end
