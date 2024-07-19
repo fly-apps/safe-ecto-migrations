@@ -22,9 +22,9 @@ where we dive into how to safely backfill data and go through Ecto Migration opt
 
 ## Adding an index
 
-Creating an index will block both reads and writes in Postgres.
+Creating an index will [block writes](https://www.postgresql.org/docs/8.2/sql-createindex.html) to the table in Postgres.
 
-MySQL is concurrent by default since 5.6 unless using `SPATIAL` or `FULLTEXT` indexes (which then it [blocks reads and writes](https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html#online-ddl-index-syntax-notes)).
+MySQL is concurrent by default since [5.6](https://downloads.mysql.com/docs/mysql-5.6-relnotes-en.pdf) unless using `SPATIAL` or `FULLTEXT` indexes, which then it [blocks reads and writes](https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html#online-ddl-index-syntax-notes).
 
 **BAD ❌**
 
@@ -38,7 +38,8 @@ end
 
 **GOOD ✅**
 
-With Postgres, instead create the index concurrently which does not block reads. There are two options:
+With Postgres, instead create the index concurrently which does not block reads.
+There are two options:
 
 **Option 1**
 

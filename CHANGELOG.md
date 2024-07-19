@@ -1,3 +1,8 @@
+# 2024-08-19
+
+- Correction to "Adding an Index" section about what locks are obtained.
+  Thanks @seanpascoe for the report!
+
 # 2023-10-10
 
 - Update the instructions for setting a columns' non-null constraint.
