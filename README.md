@@ -38,7 +38,7 @@ end
 
 **GOOD ✅**
 
-With Postgres, instead create the index concurrently which does not block reads.
+With Postgres, instead create the index concurrently which does not block writes.
 There are two options:
 
 **Option 1**
