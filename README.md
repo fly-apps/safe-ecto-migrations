@@ -139,13 +139,13 @@ of safety and separate constraint validation from referenced column creation whe
 
 ## Adding a column with a default value
 
-Adding a column with a default value to an existing table may cause the table to be rewritten. During this time, reads and writes are blocked in Postgres, and writes are blocked in MySQL and MariaDB.
+Adding a column with a default value to an existing table may cause the table to be rewritten. During this time, reads and writes are blocked in Postgres, and writes are blocked in MySQL and MariaDB. If the default column is an expression (volatile value) it will remain unsafe.
 
 **BAD ❌**
 
-Note: This becomes safe in:
+Note: This becomes safe for non-volatile (static) defaults in:
 
-- Postgres 11+
+- [Postgres 11+](https://www.postgresql.org/docs/release/11.0/). Default applies to INSERT since 7.x, and UPDATE since 9.3.
 - MySQL 8.0.12+
 - MariaDB 10.3.2+
 
@@ -157,6 +157,15 @@ def change do
 
     # Obtained an AccessExclusiveLock on the table, which blocks reads and
     # writes.
+  end
+end
+```
+
+```elixir
+def change do
+  alter table("comments") do
+    add :some_timestamp, :utc_datetime, default: fragment("now()")
+    # A volatile value
   end
 end
 ```
