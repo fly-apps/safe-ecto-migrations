@@ -189,12 +189,15 @@ Second migration:
 
 ```elixir
 def change do
-  alter table("comments") do
-    modify :approved, :boolean, default: false
-    # This took 0.28 milliseconds for 100 million rows with no fkeys,
-  end
+  execute "ALTER TABLE comments ALTER COLUMN approved SET DEFAULT false",
+          "ALTER TABLE comments ALTER COLUMN approved DROP DEFAULT"
+  # This took 0.28 milliseconds for 100 million rows with no fkeys,
 end
 ```
+
+Note: we cannot use [`modify/3`](https://hexdocs.pm/ecto_sql/Ecto.Migration.html#modify/3) as it will include updating the column type as
+well unnecessarily, causing Postgres to rewrite the table. For more information,
+[see this example](https://github.com/fly-apps/safe-ecto-migrations/issues/10).
 
 Schema change to read the new column:
 
