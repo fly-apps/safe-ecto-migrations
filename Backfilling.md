@@ -147,7 +147,7 @@ defmodule MyApp.Repo.DataMigrations.BackfillPosts do
     )
     not_updated = MapSet.difference(MapSet.new(batch_of_ids), MapSet.new(results)) |> MapSet.to_list()
     Enum.each(not_updated, &handle_non_update/1)
-    results
+    Enum.sort(results)
   end
 
   def page_query(last_id) do
@@ -172,7 +172,7 @@ defmodule MyApp.Repo.DataMigrations.BackfillPosts do
 
       ids ->
         results = change_fun.(List.flatten(ids))
-        next_page = results |> Enum.reverse() |> List.first()
+        next_page = List.first(results)
         Process.sleep(@throttle_ms)
         throttle_change_in_batches(query_fun, change_fun, next_page)
     end
@@ -286,7 +286,7 @@ defmodule MyApp.Repo.DataMigrations.BackfillWeather do
         placeholders: %{now: NaiveDateTime.utc_now()},
         log: :info
       )
-      results = Enum.map(results, & &1.id)
+      results = results |> Enum.map(& &1.id) |> Enum.sort()
 
       not_updated =
         mutations
@@ -349,7 +349,7 @@ defmodule MyApp.Repo.DataMigrations.BackfillWeather do
       ids ->
         case change_fun.(List.flatten(ids)) do
           {:ok, results} ->
-            next_page = results |> Enum.reverse() |> List.first()
+            next_page = List.first(results)
             Process.sleep(@throttle_ms)
             throttle_change_in_batches(query_fun, change_fun, next_page)
           error ->
