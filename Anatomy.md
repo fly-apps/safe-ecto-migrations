@@ -68,7 +68,7 @@ $ mix ecto.rollback
 ```
 
 ```shell
-$ mix ecto.migrate --log-sql
+$ mix ecto.migrate --log-migrations-sql
 21:29:36.461 [info]  == Running 20210702012346 MyApp.Repo.Migrations.CreateTestTable.change/0 forward
 21:29:36.462 [info]  create table test
 21:29:36.466 [debug] QUERY OK db=3.2ms
@@ -77,6 +77,11 @@ CREATE TABLE "test" ("id" bigserial, "city" varchar(40), "temp_lo" integer, "tem
 ```
 
 Ecto logged the SQL for our changes, but we're not seeing all the SQL that Ecto is running for the migration-- we're missing the Ecto.Migrator SQL that manages the migration. To get these missing logs, we'll also use another flag, `--log-migrator-sql`. Here I am tailing the PostgreSQL server logs:
+
+```shell
+$ mix ecto.rollback
+$ mix ecto.migrate --log-migrator-sql --log-migrations-sql
+```
 
 ```
 LOG:  statement: BEGIN
