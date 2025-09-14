@@ -2,7 +2,6 @@
 
 A non-exhaustive guide on common migration recipes and how to avoid trouble.
 
-
 - [Adding an index](#adding-an-index)
 - [Adding a reference or foreign key](#adding-a-reference-or-foreign-key)
 - [Adding a column with a default value](#adding-a-column-with-a-default-value)
@@ -15,8 +14,10 @@ A non-exhaustive guide on common migration recipes and how to avoid trouble.
 - [Adding a JSON column](#adding-a-json-column)
 - [Squashing migrations](#squashing-migrations)
 
-Read more about safe migrations at [Fly.io Phoenix Files](https://fly.io/phoenix-files/safe-ecto-migrations/)
-where we dive into how to safely backfill data and go through Ecto Migration options.
+Read more about safe migration techniques:
+
+- [Migration locks in "Anatomy of a Migration"](./Anatomy.md)
+- [How to backfill data and change data in bulk (aka: DML)](./Backfilling.md)
 
 ---
 

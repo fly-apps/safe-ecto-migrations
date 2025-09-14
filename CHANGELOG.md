@@ -1,3 +1,8 @@
+# 2025-09-14
+
+- Add Anatomy.md guide
+- Add Backfilling.md guide
+
 # 2024-08-19
 
 - Correction to "Adding an Index" section about what locks are obtained.
