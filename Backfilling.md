@@ -6,10 +6,11 @@ We're going to focus on bulk changes executed though Ecto migrations, but the sa
 
 Some examples of backfilling:
 
-Populating data into a new column
-Changing a column to make it required. May require changing existing rows to set a value.
-Splitting one database table into several
-Fixing bad data
+- Populating data into a new column
+- Changing a column to make it required. May require changing existing rows to set a value.
+- Splitting one database table into several
+- Fixing bad data
+
 For simplicity, we are using `Ecto.Migrator` to run our data migrations, but it's important to not let these migrations break developers' environments over time (more on this below). If using migrations to change data is a normal process that happens regularly, then you may consider exploring a migration system outside of `Ecto.Migrator` that is observable, hooks into error reporting, metrics, and allows for dry runs. This guide is intended as a starting point, and since Ecto ships with a great migration runner, we'll leverage it to also run the data migrations.
 
 There are both bad and good ways to write these data migrations. Let explore some:
