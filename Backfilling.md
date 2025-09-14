@@ -86,12 +86,12 @@ Finally, to manage these data migrations separately, we need to:
 To achieve this, be inspired by the [Ecto's documentation on creating a Release module](https://hexdocs.pm/ecto_sql/Ecto.Migrator.html#module-example-running-migrations-in-a-release), and extend your release module to allow options to pass into `Ecto.Migrator` that specifies the version to migrate and the data migrations' file path, for example:
 
 ```elixir
-@doc """
-Migrate data in the database. Defaults to migrating to the latest, `[all: true]`
-Also accepts `[step: 1]`, or `[to: 20200118045751]`
-"""
 defmodule MyApp.Release do
   # ...
+  @doc """
+  Migrate data in the database. Defaults to migrating to the latest, `[all: true]`
+  Also accepts `[step: 1]`, or `[to: 20200118045751]`
+  """
   def migrate_data(opts \\ [all: true]) do
     for repo <- repos() do
       path = Ecto.Migrator.migrations_path(repo, "data_migrations")
