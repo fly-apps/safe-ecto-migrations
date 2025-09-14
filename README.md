@@ -5,6 +5,7 @@ A non-exhaustive guide on common migration recipes and how to avoid trouble.
 - [Adding an index](#adding-an-index)
 - [Adding a reference or foreign key](#adding-a-reference-or-foreign-key)
 - [Adding a column with a default value](#adding-a-column-with-a-default-value)
+- [Changing a column's default value](#changing-a-columns-default-value)
 - [Changing the type of a column](#changing-the-type-of-a-column)
 - [Removing a column](#removing-a-column)
 - [Renaming a column](#renaming-a-column)
@@ -207,6 +208,48 @@ schema "comments" do
 + field :approved, :boolean, default: false
 end
 ```
+
+---
+
+## Changing a column's default value
+
+Changing an existing column's default may risk rewriting the table.
+
+**BAD ❌**
+
+```elixir
+def change do
+  alter table("comments") do
+    # Previously, the default was `true`
+    modify :approved, :boolean, default: false
+    # This took 10 minutes for 100 million rows with no fkeys,
+
+    # Obtained an AccessExclusiveLock on the table, which blocks reads and
+    # writes.
+  end
+end
+```
+
+The issue is that we cannot use [`modify/3`](https://hexdocs.pm/ecto_sql/Ecto.Migration.html#modify/3) as it will include updating the column type as
+well unnecessarily, causing Postgres to rewrite the table. For more information,
+[see this example](https://github.com/fly-apps/safe-ecto-migrations/issues/10).
+
+**GOOD ✅**
+
+Execute raw sql instead to alter the default:
+
+```elixir
+def change do
+  execute "ALTER TABLE comments ALTER COLUMN approved SET DEFAULT false",
+          "ALTER TABLE comments ALTER COLUMN approved SET DEFAULT true"
+  # This took 0.28 milliseconds for 100 million rows with no fkeys,
+end
+```
+
+> ![NOTE]
+> This will not update the values of rows previously-set by the old default. This value has been materialized at the time of insert/update and therefore has no distinction between whether it was set by the column `DEFAULT` or set by the original operation.
+>
+> If you want to update the default of already-written rows, you must distinguish them somehow and modify them with a [backfill](./Backfilling.md)
 
 ---
 
