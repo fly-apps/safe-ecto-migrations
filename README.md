@@ -246,7 +246,7 @@ def change do
 end
 ```
 
-> ![NOTE]
+> [!NOTE]
 > This will not update the values of rows previously-set by the old default. This value has been materialized at the time of insert/update and therefore has no distinction between whether it was set by the column `DEFAULT` or set by the original operation.
 >
 > If you want to update the default of already-written rows, you must distinguish them somehow and modify them with a [backfill](./Backfilling.md)
