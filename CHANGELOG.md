@@ -1,3 +1,7 @@
+# 2025-09-16
+
+- Added a note about materializing a new column's default value for existing rows
+
 # 2025-09-14
 
 - Add Anatomy.md guide
