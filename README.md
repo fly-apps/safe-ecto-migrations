@@ -209,6 +209,9 @@ schema "comments" do
 end
 ```
 
+> [!NOTE]
+> The safe method will not materialize the default value on the column for existing rows because the default was not set when adding the column (avoiding a potential table lock so it can re-write it to _write_ the default). However, the next `UPDATE` operation on the row will materialize the default, additionally Ecto will apply the default on the application side when reading the record. If you want to materialize the value, then you will need to consider [backfilling](./Backfilling.md).
+
 ---
 
 ## Changing a column's default value
